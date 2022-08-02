@@ -1,0 +1,71 @@
+syntax = "proto3";
+package com.project.grpc;
+
+message DroneMe {
+
+  int32 ID = 1; //ID del drone
+  string IP = 2; //IP del drone sempre "localhost"
+  int32 PORT = 3; //Porta di comunicazione del drone
+  string posizione = 4; //Posizione di partenza del drone
+
+}
+
+message MasterDrone {
+  bool isMaster = 1; //è il drone master?
+  int32 ID = 2;
+  int32 PORT = 3;
+}
+
+message ElectionParams{
+  int32 batteria = 1;
+  int32 ID = 2;
+}
+
+message ACK{
+
+}
+
+message Position{
+  int32 ID = 1;
+  int32 X = 2;
+  int32 Y = 3;
+  bool inConsegna = 4;
+  int32 batteria = 5;
+}
+
+message Ordine{
+  int32 ID = 1;
+  int32 Xr = 2;
+  int32 Yr = 3;
+  int32 Xc = 4;
+  int32 Yc = 5;
+}
+
+message Info{
+  double timestamp = 1;
+  int32 newX = 2;
+  int32 newY = 3;
+  float km = 4;
+  float mediastatPM10 = 5;
+  int32 batteria = 6;
+}
+
+
+
+service DroneService { //definizione servizio protocol buffer
+
+  rpc welcome(DroneMe) returns (MasterDrone); //metodo, il drone invia i suoi dati a ogni drone. Per ogni invio, riceve se quello è il drone master
+
+  rpc election(ElectionParams) returns (ACK); //metodo per algoritmo di elezione (maggiore batteria o maggiore ID)
+
+  rpc elected(ElectionParams) returns (ACK); //metodo per comunicazione master eletto
+
+  rpc position(ACK) returns (Position); //metodo info drone da comunicare al drone master per inizializzare la sua lista più dettagliata dei droni
+
+  rpc assegnaconsegna(Ordine) returns (Info); //metodo assegnamento consegna a drone target
+
+  rpc ping(ACK) returns (ACK); //ping per controllare che il master non sia uscito
+
+  rpc sendInfo(Position) returns (ACK); //invio info dettagliate da parte del drone appena entrato a drone master
+
+}
